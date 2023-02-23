@@ -4,13 +4,53 @@
      -->
     <div id="chart">
         <apexchart type="bar" height="350" :options="chartOptions" :series="series"></apexchart>
-      </div>
+    </div>
+<div>
+<div class="input-group input-group-sm mb-3">
+  <div class="input-group-prepend">
+    <span class="input-group-text" id="inputGroup-sizing-sm">Year</span>
+  </div>
+  <input type="text" class="form-control" aria-label="Small" v-model="year" aria-describedby="inputGroup-sizing-sm">
+</div>
+
+<div class="input-group input-group-sm mb-3">
+  <div class="input-group-prepend">
+    <span class="input-group-text" id="inputGroup-sizing-sm">Population</span>
+  </div>
+  <input type="text" class="form-control" aria-label="Small" v-model="population" aria-describedby="inputGroup-sizing-sm">
+</div>
+
+ <button type="button" class="btn btn-primary" @click="agregarPoblacion()">Agregar poblacion</button>
+</div>
+ 
+
+  <table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Nation</th>
+      <th scope="col">Year</th>
+      <th scope="col">Population</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr v-for="(item,index) in   this.tablaDatos" :key="index">
+      <th scope="row">{{ index+1 }}</th>
+      <td>{{ item.Nation }}</td>
+      <td>{{ item.Year}}</td>
+      <td>{{ item.Population}}</td>
+    </tr>
+  </tbody>
+</table>
+
   </div>
 </template>
 
 <script>
 import VueApexCharts from "vue3-apexcharts";
-import axios from 'axios';
+// import axios from 'axios';
+import servicioAPIS from "../service/serviceEjemplo"
+
 export default {
   name: 'HelloWorld',
   props: {
@@ -24,7 +64,9 @@ export default {
       poblacion:[],
       poblacionActual:[],
       Años:[],
-
+      tablaDatos:[],
+      year:'',
+      population:'',
       series: [{
             name: 'Poblacion',
             data: [2.3, 3.1, 4.0, 10.1, 4.0, 3.6, 3.2, 2.3, 1.4, 0.8, 0.5, 0.2]
@@ -114,12 +156,34 @@ export default {
 
 
    methods:{
-    //Metodo asyncrono
-     async  consumirApi(){
-          const data =await  axios.get('https://datausa.io/api/data?drilldowns=Nation&measures=Population')
-          console.log("Datos traidos desde api",data.data.data)
+    async agregarPoblacion(){
+        /*    await axios.post('localahots:8080//datausa.io/api/data?drilldowns=Nation&measures=Population',{
+                Nation: "United States",
+                Year: this.year,
+                Population: this.population,
+        })*/
 
+    var poblacionNueva={
+      Nation: "United States",
+      Year: this.year,
+      Population: this.population,
+    }
+    this.tablaDatos.push(poblacionNueva)
+    this.year='';
+    this.population='';
+   },
+
+    //Metodo asyncrono
+     async  consumirApi () {
+          // const data =await  axios.get('https://datausa.io/api/data?drilldowns=Nation&measures=Population')
+
+             const data= await servicioAPIS.consumirApiPoblacionesUSS();
+                console.log("Datos traidos desde api",data.data.data)
                 this.poblacion=data.data.data;
+               
+                // llenamos arreglo Tabla
+                this.tablaDatos=data.data.data
+                
 
                  this.poblacion.filter((data)=>{
                       this.poblacionActual.push(data.Population)
@@ -131,7 +195,7 @@ export default {
                 data:  this.poblacionActual
               }]
 
-          //Asignamos años
+          // Asignamos años
               this.chartOptions={
                 xaxis:{
                   categories: this.Años
